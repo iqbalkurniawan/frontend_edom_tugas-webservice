@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Table Page</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+          <a class="navbar-brand" href="#">Edom</a>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+              <li class="nav-item">
+                <a class="nav-link" href="#" id="nama-pengguna"></a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" id="logout" href="#">Logout</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    <div class="container mt-5">
+      <h1 class="text-center">Data Penilaian</h1>
+      <br>
+      <h5>Tambah data</h5>
+      <form id="form-tambah-data">
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">Mata Kuliah</th>
+            <th scope="col">Nilai</th>
+            <th scope="col">Dosen</th>
+            <th scope="col">Aksi</th>
+          </tr>
+        </thead> 
+        <tbody>
+            <tr>
+                <td> 
+                    <select  class="form-control" id="option-matkul">
+                    </select>
+                </td>
+                <td> 
+                    <select  class="form-control" id="nilai">
+                        <option>::Pilih Nilai skalai 1-4 ::</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                    </select>
+                </td>
+                <td>
+                    <select  class="form-control" id="option-dosen">
+                    </select>
+                </td>
+                <td>
+                    <button type="submit" class="btn btn-primary">Simpan Data</button>
+                </td>
+            </tr>
+        </tbody>
+      </table>
+      </form>
+
+      <hr>
+      <table class="table data-penilaian">
+        <thead>
+          <tr>
+            <th scope="col">Mata Kuliah</th>
+            <th scope="col">Nilai</th>
+            <th scope="col">Dosen</th>
+            <th scope="col">Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+    <script>
+        $(document).ready(function() {
+            if (localStorage.length < 1){
+                window.location.href = "index.html";
+            }
+            let token = localStorage.getItem('setToken');
+            let user = localStorage.getItem('setUser');
+            user = JSON.parse(user);
+            
+            $('#nama-pengguna').html(user.name);
+            $.ajax({
+                url: 'http://localhost:8000/matakuliah', // Replace with your actual API endpoint
+                type: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                },
+                success: function(res) {
+                    let option = '<option>:: Pilih Matkul ::</option>';
+                    if(res.data.length > 0){
+                        for(let i = 0; i < res.data.length; i++){
+                            option += `<option value="${res.data[i].id}">${res.data[i].kodematkul} - ${res.data[i].matakuliah}</option>`;
+                        }                    
+                    }
+                    $('#option-matkul').html(option);
+
+                },
+                error: function(err) {
+                }
+            });
+
+            $.ajax({
+                url: 'http://localhost:8000/dosen', // Replace with your actual API endpoint
+                type: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                },
+                success: function(res) {
+                    let option = '<option>:: Pilih Dosen ::</option>';
+                    if(res.data.length > 0){
+                        for(let i = 0; i < res.data.length; i++){
+                            option += `<option value="${res.data[i].id}">${res.data[i].nidn} - ${res.data[i].nama_dosen}</option>`;
+                        }                    
+                    }
+                    $('#option-dosen').html(option);
+
+                },
+                error: function(err) {
+                }
+            });
+
+            $.ajax({
+                url: 'http://localhost:8000/penilaian', // Replace with your actual API endpoint
+                type: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                },
+                success: function(res) {
+                    console.log(res);
+                    // console.log(res.data.length)
+                    let row = '';
+                    if(res.data.length > 0){
+                        for(let i = 0; i < res.data.length; i++){
+                            row += `<tr>
+                            <td>${res.data[i].kodematkul}-${res.data[i].matakuliah}</td>
+                            <td>${res.data[i].nilai}</td>
+                            <td>${res.data[i].nidn}-${res.data[i].nama_dosen}</td>
+                            <td> <button class="hapus btn btn-danger" data-id="${res.data[i].id}">Hapus</button></td>
+                            </tr>`;
+                        }                    
+                    }
+                    $('.data-penilaian tbody').html(row);
+                },
+                error: function(err) {
+                    console.error(err);
+                    console.log(err.status)
+                    if(err.status == 401){
+                        alert('sesi anda telah habis silahkan login ulang kembali');
+                        window.location.href = "index.html";
+                    }
+                    // alert('Error fetching data..');
+                }
+            });  
+            
+            $("#form-tambah-data").submit(function (e) {
+                    e.preventDefault();
+                
+                    let matkul = $('#option-matkul').val();
+                    let dosen = $('#option-dosen').val();
+                    let nilai = $('#nilai').val();
+                
+                    let user_id = user.mahasiswa_id;
+
+                    // console.log(user.id);
+                    $.ajax({
+                        type: "POST",
+                        headers: {
+                            'Authorization': 'Bearer ' + token
+                        },
+                        url: "http://localhost:8000/penilaian", // Replace with your actual login endpoint
+                        data: {
+                            matkul:matkul,
+                            dosen_id:dosen,
+                            nilai:nilai,
+                            matkul_id:nilai,
+                            mahasiswa_id:user_id
+                        },
+                        success: function(res) {
+                            // console.log(res);
+                            alert('data penilaaian berhasil disiimpan');
+                            window.location.reload();
+                        },
+                        error: function(err) {
+                            // Handle the error response, for example, show an error message
+                            console.error(err);
+                            if(err.status == 401){
+                                alert('sesi anda telah habis silahkan login ulang kembali');
+                                window.location.href = "index.html";
+                            }
+                        }
+                    });
+            });
+
+            $(document).on("click", ".hapus", function() {
+                var r = confirm("Yakin hapus data?");
+                if (r == true) {
+                    let id = $(this).data('id');
+                    $.ajax({
+                        type: 'DELETE',
+                        headers: {
+                            'Authorization': 'Bearer ' + token
+                        },
+                        url: `http://localhost:8000/penilaian/${id}`, // Replace with your actual login endpoint
+                        success: function(res) {
+                            // console.log(res);
+                            alert('data penilaaian berhasil dihapus');
+                            window.location.reload();
+                        },
+                        error: function(err) {
+                            // Handle the error response, for example, show an error message
+                            console.error(err);
+                            if(err.status == 401){
+                                alert('sesi anda telah habis silahkan login ulang kembali');
+                                window.location.href = "index.html";
+                            }
+                        }
+                    });
+                }
+            });
+
+            $('#logout').click(function(){
+                localStorage.removeItem('setToken');
+                localStorage.removeItem('setUser');
+                window.location.href = "index.html";
+            });
+        });
+    </script>
+</body>
+</html>
